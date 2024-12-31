@@ -5,6 +5,10 @@ information when the terminal is in full screen.
 
 ![](https://github.com/Townk/statusbar.wezterm/blob/main/assets/Wezterm%20Status%20Bar.png)
 
+![](https://github.com/Townk/statusbar.wezterm/blob/main/assets/status-bar-leader-key.png)
+
+![](https://github.com/Townk/statusbar.wezterm/blob/main/assets/status-bar-search.png)
+
 ## ✨ Features
 
 - ⌨️ **Non-fancy tabs**: Simple text-based with long names truncated;
