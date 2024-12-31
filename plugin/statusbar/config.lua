@@ -18,6 +18,9 @@ local wezterm = require 'wezterm'
 ---@field search string
 ---@field copy string
 
+---@class StatusBarIconLibraryPaneHost
+---@field ssh string
+
 ---@class StatusBarIconLibraryTabs
 ---@field dir string
 ---@field home string
@@ -34,6 +37,7 @@ local wezterm = require 'wezterm'
 ---@class StatusBarIconLibrary
 ---@field battery StatusBarIconLibraryBattery
 ---@field mode StatusBarIconLibraryMode
+---@field pane_host StatusBarIconLibraryPaneHost
 ---@field tabs StatusBarIconLibraryTabs
 ---@field time StatusBarIconLibraryTime
 ---@field wifi StatusBarIconLibraryWifi
@@ -71,10 +75,13 @@ M.icons = {
     },
   },
   mode = {
-    command = wezterm.nerdfonts.md_apple_keyboard_command, -- 󰘳,
-    workspace = wezterm.nerdfonts.md_collage, -- 󰙀,
-    search = wezterm.nerdfonts.fa_search, -- ,
-    copy = wezterm.nerdfonts.md_content_copy, -- 󰆏,
+    command = wezterm.nerdfonts.md_apple_keyboard_command, -- 󰘳
+    workspace = wezterm.nerdfonts.md_collage, -- 󰙀
+    search = wezterm.nerdfonts.fa_search, -- 
+    copy = wezterm.nerdfonts.md_content_copy, -- 󰆏
+  },
+  pane_host = {
+    ssh = wezterm.nerdfonts.md_remote_desktop, -- 󰢹
   },
   tabs = {
     dir = wezterm.nerdfonts.md_folder_open, -- 󰝰

@@ -38,7 +38,6 @@ function M.apply_to_config(config, customization)
   config.tab_max_width = status_config.tabs.max_width
   config.tab_and_split_indices_are_zero_based = false
 
-  segments.config = config
   segments.status_config = status_config
   wezterm.on('update-status', segments.update_status)
 
