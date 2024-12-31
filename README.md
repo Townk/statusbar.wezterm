@@ -3,7 +3,7 @@
 A simple and minimalist status bar for Wezterm that displays tabs and extra
 information when the terminal is in full screen.
 
-![](https://github.com/Townk/statusbar.wezterm/blob/933e8452498b93a540372d63ee37f02e9ced609e/assets/Wezterm%20Status%20Bar.png)
+![](https://github.com/Townk/statusbar.wezterm/blob/main/assets/Wezterm%20Status%20Bar.png)
 
 ## ✨ Features
 
