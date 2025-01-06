@@ -7,16 +7,29 @@ local utils = require("statusbar.utils")
 ---Returns a strings representing a status segment.
 ---@param color Color
 ---@param text string
+---@param last_segment boolean?
 ---@return string
-local function format_segment(color, text)
+local function format_segment(color, text, last_segment)
 	local fg = color:darken(0.8)
 	if color:contrast_ratio(fg) < 3.8 then
 		fg = color:lighten(0.6)
 	end
+	local suffix = " "
+	if last_segment then
+		suffix = ""
+	end
 	return wezterm.format({
 		{ Background = { Color = color } },
 		{ Foreground = { Color = fg } },
-		{ Text = " " .. text .. " " },
+		{ Text = " " .. text .. suffix },
+	})
+end
+
+local function segment_divider(left_color, right_color)
+	return wezterm.format({
+		{ Background = { Color = left_color } },
+		{ Foreground = { Color = right_color } },
+		{ Text = wezterm.nerdfonts.ple_lower_right_triangle },
 	})
 end
 
@@ -30,7 +43,7 @@ local M = {}
 function M.mode_color(key_table, color_scheme)
 	local active_table = M.status_config.key_tables[key_table]
 	if not active_table or key_table == "workspace" then
-		return wezterm.color.parse(color_scheme.tab_bar.inactive_tab.bg_color):darken(0.2)
+		return wezterm.color.parse(color_scheme.tab_bar.inactive_tab.bg_color)
 	end
 	return wezterm.color.parse(active_table.color)
 end
@@ -39,8 +52,9 @@ end
 ---@param window Window
 ---@param key_table string
 ---@param color Color
+---@param last_segment boolean?
 ---@return string
-function M.mode(window, key_table, color)
+function M.mode(window, key_table, color, last_segment)
 	local label
 	local active_table = M.status_config.key_tables[key_table]
 	local ws_name = window:active_workspace()
@@ -55,22 +69,27 @@ function M.mode(window, key_table, color)
 	if active_table.icon then
 		label = active_table.icon .. " " .. label
 	end
-	return format_segment(color, label)
+	return format_segment(color, label, last_segment)
 end
 
-function M.pane_host(window, color)
+---@param window Window
+---@param color Color
+---@param last_segment boolean?
+---@return string
+function M.pane_host(window, color, last_segment)
 	local pane_info = utils.parse_pane_title(window:active_pane():get_title())
 	if not pane_info.host then
 		return ""
 	end
-	return format_segment(color, M.status_config.icons.pane_host.ssh .. " " .. pane_info.host.hostname)
+	return format_segment(color, M.status_config.icons.pane_host.ssh .. " " .. pane_info.host.hostname, last_segment)
 end
 
 ---Display the computer's battery level with an icon and the percentual of
 ---energy left.
 ---@param color Color
+---@param last_segment boolean?
 ---@return string
-function M.battery(color)
+function M.battery(color, last_segment)
 	local battery = wezterm.battery_info()[1]
 	local percent = ""
 	local icon = ""
@@ -91,20 +110,26 @@ function M.battery(color)
 			icon = M.status_config.icons.battery[string.lower(battery.state)][1]
 		end
 	end
-	return format_segment(color, percent .. " " .. icon)
+	return format_segment(color, percent .. " " .. icon, last_segment)
 end
 
 ---Display the date and time.
 ---@param color Color
+---@param last_segment boolean?
 ---@return string
-function M.time(color)
-	return format_segment(color, M.status_config.icons.time.calendar .. " " .. wezterm.strftime("%a %b %-e %-l:%M%P"))
+function M.time(color, last_segment)
+	return format_segment(
+		color,
+		M.status_config.icons.time.calendar .. " " .. wezterm.strftime("%a %b %-e %-l:%M%P"),
+		last_segment
+	)
 end
 
 ---Display the WiFi status with an icon.
 ---@param color Color
+---@param last_segment boolean?
 ---@return string
-function M.wifi(color)
+function M.wifi(color, last_segment)
 	local wifi = M.status_config.icons.wifi.inactive
 	local output = io.popen("ifconfig en0 | awk '/status:/{print $2}'")
 	if output then
@@ -112,14 +137,14 @@ function M.wifi(color)
 		output:close()
 		wifi = M.status_config.icons.wifi[line]
 	end
-	return format_segment(color, wifi .. " ")
+	return format_segment(color, wifi .. " ", last_segment)
 end
 
 ---Construct the right side of the status bar with all of its segments.
 ---@param window Window
----@param pane Pane
+---@param _ Pane
 ---@return string
-function M.build_right_status(window, pane)
+function M.build_right_status(window, _)
 	local status_mode = ""
 	if window:leader_is_active() then
 		status_mode = "command"
@@ -136,25 +161,55 @@ function M.build_right_status(window, pane)
 		5
 	)
 	local dimen = window:get_dimensions()
-	local bg1, bg2, bg3, bg4
+	local bg1, bg2, bg3, bg4, bg
+	local first_segment = 0
+	bg = colors[5]
 	if dimen.is_full_screen then
 		bg1 = colors[1]
 		bg2 = colors[2]
 		bg3 = colors[3]
 		bg4 = colors[4]
+		first_segment = 4
 	else
 		bg3 = colors[1]
 		bg4 = colors[2]
+		first_segment = 2
 	end
 
 	local pane_host = M.pane_host(window, bg3)
 	if pane_host == "" then
 		bg4 = bg3
+		first_segment = first_segment - 1
 	end
 
-	local status = M.mode(window, status_mode, bg4) .. pane_host
+	local status = ""
+	local mode = M.mode(window, status_mode, bg4)
+	if #mode > 0 and #pane_host > 0 then
+		status = segment_divider(bg, colors[first_segment])
+			.. mode
+			.. segment_divider(colors[first_segment - 1])
+			.. pane_host
+	elseif #mode > 0 then
+		status = segment_divider(bg, colors[first_segment]) .. mode
+	elseif #pane_host > 0 then
+		status = segment_divider(bg, colors[first_segment]) .. pane_host
+	end
+
 	if dimen.is_full_screen then
-		status = status .. M.battery(bg2) .. M.wifi(bg2) .. M.time(bg1)
+		if #status > 0 then
+			status = status
+				.. segment_divider(bg3, bg2)
+				.. M.battery(bg2)
+				.. M.wifi(bg2)
+				.. segment_divider(bg2, bg1)
+				.. M.time(bg1, true)
+		else
+			status = segment_divider(bg, bg2)
+				.. M.battery(bg2)
+				.. M.wifi(bg2)
+				.. segment_divider(bg2, bg1)
+				.. M.time(bg1, true)
+		end
 	end
 	return status
 end
@@ -162,8 +217,8 @@ end
 ---This function should be passed to the `update-status` hook of Wezterm so it
 ---can display an updated status bar.
 ---@param window Window
----@param pane Pane
-function M.update_status(window, pane)
+---@param _ Pane
+function M.update_status(window, _)
 	window:set_left_status("")
 	window:set_right_status(M.build_right_status(window))
 end

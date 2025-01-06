@@ -54,7 +54,7 @@ local wezterm = require 'wezterm'
 local M = {
   tabs = {
     hide_on_single_tab = false,
-    max_width = 35,
+    max_width = 40,
     truncation_point = 0.4,
   }
 }
