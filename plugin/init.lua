@@ -1,6 +1,8 @@
 -- SPDX-License-Identifier: MIT
 -- Copyright © 2024 Thiago Alves
 
+---@diagnostic disable:assign-type-mismatch
+---@type Wezterm
 local wezterm = require 'wezterm'
 
 local M = {}
@@ -15,17 +17,12 @@ for _, plugin in ipairs(wezterm.plugin.list()) do
   end
 end
 
-package.path = package.path
-  .. ';'
-  .. plugin_dir
-  .. separator
-  .. 'plugin'
-  .. separator
-  .. '?.lua'
+package.path = package.path .. ';' .. plugin_dir .. separator .. 'plugin' .. separator .. '?.lua'
 
 local segments = require 'statusbar.segments'
 local tabs = require 'statusbar.tabs'
 local status_config = require 'statusbar.config'
+local cache = require 'statusbar.cache'
 
 ---Main function to apply required configurations to the user's configuration.
 ---@param config Config
@@ -44,5 +41,8 @@ function M.apply_to_config(config, customization)
   tabs.status_config = status_config
   wezterm.on('format-tab-title', tabs.format_tab_title)
 end
+
+---@type StatusBarNamingElementCache
+M.naming_cache = cache
 
 return M

@@ -1,6 +1,8 @@
 -- SPDX-License-Identifier: MIT
 -- Copyright © 2024 Thiago Alves
 
+---@diagnostic disable:assign-type-mismatch
+---@type Wezterm
 local wezterm = require 'wezterm'
 
 ---@class StatusBarConfigKeyTable
